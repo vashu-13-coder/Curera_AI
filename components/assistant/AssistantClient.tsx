@@ -9,11 +9,7 @@ import VoiceInput from "@/components/assistant/VoiceInput"
 import EmergencyCard from "@/components/assistant/EmergencyCard"
 import SummaryReview from "@/components/assistant/SummaryReview"
 import ConsentPanel from "@/components/assistant/ConsentPanel"
-import type {
-  CaseSummary,
-  EmergencyCategory,
-  EmergencyResponse,
-} from "@/types"
+import type { CaseSummary, EmergencyCategory, EmergencyResponse } from "@/types"
 
 const MIN_LEN = 5
 const MAX_LEN = 4000
@@ -26,7 +22,7 @@ interface EmergencyState {
   response: EmergencyResponse
 }
 
-export default function AssistantClient() {
+export default function AssistantClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [transcript, setTranscript] = useState("")
   const [interim, setInterim] = useState("")
   const [stage, setStage] = useState<Stage>("form")
@@ -37,9 +33,7 @@ export default function AssistantClient() {
 
   const trimmedLen = transcript.trim().length
   const canSend =
-    trimmedLen >= MIN_LEN &&
-    transcript.length <= MAX_LEN &&
-    stage !== "loading"
+    trimmedLen >= MIN_LEN && transcript.length <= MAX_LEN && stage !== "loading"
 
   async function handleSend() {
     if (!canSend) return
@@ -53,46 +47,20 @@ export default function AssistantClient() {
         body: JSON.stringify({ transcript }),
       })
 
-      if (res.status === 400) {
-        setError("invalid")
-        setStage("form")
-        return
-      }
-      if (res.status === 429) {
-        setError("rate_limit")
-        setStage("form")
-        return
-      }
-      if (res.status === 502) {
-        setError("ai_failed")
-        setStage("form")
-        return
-      }
-      if (!res.ok) {
-        setError("ai_failed")
-        setStage("form")
-        return
-      }
+      if (res.status === 400) { setError("invalid"); setStage("form"); return }
+      if (res.status === 429) { setError("rate_limit"); setStage("form"); return }
+      if (res.status === 502) { setError("ai_failed"); setStage("form"); return }
+      if (!res.ok) { setError("ai_failed"); setStage("form"); return }
 
       const data = (await res.json()) as
-        | {
-            emergency: true
-            category: EmergencyCategory
-            matchedPhrase: string | null
-            response: EmergencyResponse
-          }
-        | {
-            emergency: false
-            summary: CaseSummary
-            disclaimer: string
-          }
+        | { emergency: true; category: EmergencyCategory; matchedPhrase: string | null; response: EmergencyResponse }
+        | { emergency: false; summary: CaseSummary; disclaimer: string }
 
       if (data.emergency === true) {
         setEmergency({ category: data.category, response: data.response })
         setStage("emergency")
         return
       }
-
       setSummary(data.summary)
       setDisclaimer(data.disclaimer ?? "")
       setStage("summary")
@@ -113,9 +81,7 @@ export default function AssistantClient() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold">
-          Talk to CURERA AI
-        </h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Talk to CURERA AI</h1>
         <p className="text-muted-foreground text-sm sm:text-base">
           Speak or type your concern in your own words. CURERA organizes it
           into a structured case for a healthcare professional to review.
@@ -131,12 +97,12 @@ export default function AssistantClient() {
         />
       ) : stage === "summary" && summary ? (
         <>
-          <SummaryReview
+          <SummaryReview summary={summary} disclaimer={disclaimer} onBack={handleBack} />
+          <ConsentPanel
             summary={summary}
-            disclaimer={disclaimer}
-            onBack={handleBack}
+            transcript={transcript}
+            isLoggedIn={isLoggedIn}
           />
-          <ConsentPanel />
         </>
       ) : (
         <>
@@ -176,25 +142,16 @@ export default function AssistantClient() {
               className="flex justify-between text-xs text-muted-foreground"
             >
               <span>Minimum {MIN_LEN} characters</span>
-              <span>
-                {transcript.length} / {MAX_LEN}
-              </span>
+              <span>{transcript.length} / {MAX_LEN}</span>
             </div>
             {interim && (
-              <p
-                aria-live="polite"
-                className="text-sm italic text-muted-foreground"
-              >
+              <p aria-live="polite" className="text-sm italic text-muted-foreground">
                 Hearing: {interim}
               </p>
             )}
           </div>
 
-          <Button
-            onClick={handleSend}
-            disabled={!canSend}
-            className="w-full sm:w-auto"
-          >
+          <Button onClick={handleSend} disabled={!canSend} className="w-full sm:w-auto">
             {stage === "loading" ? "Sending…" : "Send"}
           </Button>
         </>
@@ -203,13 +160,7 @@ export default function AssistantClient() {
   )
 }
 
-function ErrorAlert({
-  kind,
-  onRetry,
-}: {
-  kind: ErrorKind
-  onRetry: () => void
-}) {
+function ErrorAlert({ kind, onRetry }: { kind: ErrorKind; onRetry: () => void }) {
   const messages: Record<ErrorKind, string> = {
     invalid:
       "Your text must be at least 5 characters and at most 4000 characters.",
@@ -227,9 +178,7 @@ function ErrorAlert({
       <AlertDescription className="space-y-2">
         <p>{messages[kind]}</p>
         {(kind === "ai_failed" || kind === "network") && (
-          <Button size="sm" variant="outline" onClick={onRetry}>
-            Retry
-          </Button>
+          <Button size="sm" variant="outline" onClick={onRetry}>Retry</Button>
         )}
       </AlertDescription>
     </Alert>
