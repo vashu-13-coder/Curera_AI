@@ -3,9 +3,12 @@ import { redirect } from "next/navigation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import ReviewForm from "@/components/professional/ReviewForm"
+import MessageThread from "@/components/cases/MessageThread"
+import AppointmentList from "@/components/cases/AppointmentList"
+import StatusActionBar from "@/components/professional/StatusActionBar"
 import { createClient } from "@/lib/supabase/server"
-import type { CaseSummary, Urgency } from "@/types"
+import type { Appointment, CaseSummary, Urgency } from "@/types"
+import { getCaseStatusLabel } from "@/lib/followup"
 
 interface Params {
   params: Promise<{ id: string }>
@@ -47,7 +50,7 @@ export default async function ProfessionalCasePage({ params }: Params) {
         <Alert variant="destructive" role="alert">
           <AlertTitle>Access was withdrawn</AlertTitle>
           <AlertDescription>
-            The patient has revoked consent for this case, or it no longer exists.
+            The patient has revoked consent, the case no longer exists, or the case is not shared with you.
           </AlertDescription>
         </Alert>
       </div>
@@ -85,7 +88,7 @@ export default async function ProfessionalCasePage({ params }: Params) {
             {urgency === "urgent" ? "Urgent" : urgency === "soon" ? "Soon" : "Routine"}
           </Badge>
           <Badge variant="outline">
-            {caseRow.status === "reviewed" ? "Reviewed" : "New"}
+            {getCaseStatusLabel(caseRow.status)}
           </Badge>
         </div>
       </header>
@@ -150,13 +153,30 @@ export default async function ProfessionalCasePage({ params }: Params) {
         </CardContent>
       </Card>
 
-      <ReviewForm
+      <StatusActionBar
         caseId={caseRow.id}
+        initialStatus={caseRow.status}
         initialNote={caseRow.professional_note ?? ""}
-        initialReviewed={caseRow.status === "reviewed"}
       />
+
+      <AppointmentList appointments={await loadAppointments(supabase, id)} />
+      <MessageThread caseId={caseRow.id} currentUserId={user.id} />
     </div>
   )
+}
+
+async function loadAppointments(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  caseId: string
+): Promise<Appointment[]> {
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("id, case_id, professional_id, scheduled_at, notes, created_at")
+    .eq("case_id", caseId)
+    .order("scheduled_at", { ascending: true })
+
+  if (error) throw new Error("Could not load appointments.")
+  return (data ?? []) as Appointment[]
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {

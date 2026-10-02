@@ -1,11 +1,11 @@
-import type { CaseSummary, Urgency } from "@/types"
+import type { CaseStatus, CaseSummary, Urgency } from "@/types"
 
 export interface CaseRow {
   id: string
   patient_id: string
   summary: CaseSummary
   urgency: Urgency
-  status: "new" | "reviewed"
+  status: CaseStatus
   professional_note: string | null
   created_at: string
 }

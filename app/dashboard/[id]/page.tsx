@@ -2,11 +2,14 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import MessageThread from "@/components/cases/MessageThread"
+import AppointmentList from "@/components/cases/AppointmentList"
 import RevokeConsentButton from "@/components/dashboard/RevokeConsentButton"
 import DeleteCaseButton from "@/components/dashboard/DeleteCaseButton"
 import { createClient } from "@/lib/supabase/server"
-import type { CaseSummary, Urgency } from "@/types"
+import type { Appointment, CaseSummary, Urgency } from "@/types"
 import type { ConsentRow } from "@/types/app"
+import { getCaseStatusLabel } from "@/lib/followup"
 
 interface Params {
   params: Promise<{ id: string }>
@@ -37,14 +40,24 @@ export default async function CaseDetailPage({ params }: Params) {
 
   if (!caseRow) notFound()
 
-  const { data: consents } = await supabase
+  const { data: consents, error: consentsError } = await supabase
     .from("consents")
     .select("id, case_id, share_summary, share_transcript, granted_at, revoked_at")
     .eq("case_id", id)
     .order("granted_at", { ascending: false })
 
+  if (consentsError) throw new Error("Could not load sharing settings.")
+
   const activeConsent: ConsentRow | null =
     (consents ?? []).find((c) => c.revoked_at === null) ?? null
+
+  const { data: appointments, error: appointmentsError } = await supabase
+    .from("appointments")
+    .select("id, case_id, professional_id, scheduled_at, notes, created_at")
+    .eq("case_id", id)
+    .order("scheduled_at", { ascending: true })
+
+  if (appointmentsError) throw new Error("Could not load appointments.")
 
   const summary = caseRow.summary as CaseSummary
   const urgency = caseRow.urgency as Urgency
@@ -73,7 +86,7 @@ export default async function CaseDetailPage({ params }: Params) {
             {urgency === "urgent" ? "Urgent" : urgency === "soon" ? "Soon" : "Routine"}
           </Badge>
           <Badge variant="outline">
-            {caseRow.status === "reviewed" ? "Reviewed" : "New"}
+            {getCaseStatusLabel(caseRow.status)}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -143,6 +156,9 @@ export default async function CaseDetailPage({ params }: Params) {
           )}
         </CardContent>
       </Card>
+
+      <AppointmentList appointments={(appointments ?? []) as Appointment[]} />
+      <MessageThread caseId={caseRow.id} currentUserId={user.id} />
     </div>
   )
 }
