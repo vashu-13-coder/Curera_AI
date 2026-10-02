@@ -12,7 +12,6 @@ export type CaseStatus =
 export type ProfessionalSettableStatus =
   | "under_review"
   | "info_requested"
-  | "scheduled"
   | "closed"
 
 export interface CaseSummary {

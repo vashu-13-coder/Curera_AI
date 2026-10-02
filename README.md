@@ -2,38 +2,76 @@
 
 **Healthcare That Listens Before It Routes**
 
-A voice-first communication layer between patients and healthcare professionals.
+CURERA AI helps patients organize their own words into a case summary and share
+it with a healthcare professional. Professionals can update a case status,
+request more information, exchange messages, and schedule an appointment.
 
-## What it does (planned)
+CURERA AI is not an AI doctor. It does not diagnose, prescribe, or make
+clinical decisions. The summary is a communication aid, not a substitute for
+professional judgement or emergency care.
 
-1. Patient speaks or types in their own words.
-2. CURERA AI organizes the story into a structured case summary.
-3. A healthcare professional reviews the case and can accept, request more information, or schedule an appointment.
-4. The patient receives the next step — appointment or follow-up.
+## Technology
 
-**CURERA AI is not an AI doctor.** It does not diagnose, does not prescribe,
-and does not make clinical decisions. A human healthcare professional is
-always in the loop, and information is shared only with patient consent.
-
-## Problem it solves
-
-- Patients struggle to explain their concerns clearly.
-- Important details are scattered or missed.
-- Patients don't know which professional to approach.
-- Professionals receive incomplete or hard-to-organize information.
-
-## Tech stack
-
-- Next.js 15 (App Router)
-- React 19
+- Next.js 15 App Router and React 19
 - TypeScript
-- Tailwind CSS (v4 by default with `create-next-app@15`)
-- shadcn/ui
-- next-themes (light / dark / system)
+- Supabase Auth and Postgres with row-level security
+- Tailwind CSS and local UI components
+- Vitest and ESLint
 
-## Getting started
+## Local setup
 
-### 1. Install dependencies
+1. Install dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+2. Copy `.env.example` to `.env.local` and set:
+
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `LLM_API_KEY`
+   - `LLM_MODEL` (optional; defaults to the model configured by the app)
+
+   `NEXT_PUBLIC_*` values are browser-visible. Never put a service-role key in
+   a `NEXT_PUBLIC_*` variable or in client-side code.
+
+3. In the Supabase SQL Editor, apply
+   [`supabase/migrations/001_init.sql`](./supabase/migrations/001_init.sql)
+   followed by
+   [`supabase/migrations/002_followup.sql`](./supabase/migrations/002_followup.sql).
+   The second migration adds case messages and appointments, updates case
+   statuses, and installs the RPCs used by the professional workflow.
+
+4. Start the development server:
+
+   ```bash
+   pnpm dev
+   ```
+
+## Checks
 
 ```bash
-pnpm install
+pnpm test
+pnpm lint
+pnpm build
+```
+
+## Database and access notes
+
+- Patients can read, revoke sharing for, or delete their own cases.
+- Professionals can view cases only while consent is active. Transcript access
+  follows the transcript-sharing choice; status changes and professional notes
+  go through database RPCs.
+- Messages and appointments are scoped to the case and are removed when the
+  case is deleted.
+- A server-only admin helper exists in `lib/supabase/admin.ts`. It is not
+  required for the patient/professional flows described above. Do not expose a
+  Supabase service-role key to the browser.
+
+## Deployment
+
+Configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`LLM_API_KEY`, and `LLM_MODEL` in the hosting provider's server environment.
+Configure the deployed domain in Supabase Authentication URL settings. Do not
+add a service-role key to client-visible environment variables.

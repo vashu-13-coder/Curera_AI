@@ -14,7 +14,7 @@ export async function GET() {
       .select("id", { count: "exact", head: true })
 
     if (error) {
-      console.error("[api/health] Supabase error:", error)
+      console.error("[api/health] Supabase query failed")
       return NextResponse.json(
         {
           status: "error",
@@ -29,7 +29,7 @@ export async function GET() {
       message: "Supabase connection is healthy.",
     })
   } catch (err) {
-    console.error("[api/health] Unexpected error:", err)
+    console.error("[api/health] Unexpected health-check failure")
     const message = isProd
       ? "Health check failed."
       : err instanceof Error

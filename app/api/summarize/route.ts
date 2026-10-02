@@ -123,7 +123,6 @@ Return a JSON object with EXACTLY these keys:
 Return only the JSON object. No markdown, no commentary.`
 
   let summary: z.infer<typeof caseSummarySchema> | null = null
-  let lastError: Error | null = null
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -133,11 +132,8 @@ Return only the JSON object. No markdown, no commentary.`
         caseSummarySchema
       )
       break
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error("Unknown LLM error")
-      console.error(
-        `[api/summarize] LLM attempt ${attempt + 1} failed: ${lastError.message}`
-      )
+    } catch {
+      console.error(`[api/summarize] LLM attempt ${attempt + 1} failed`)
     }
   }
 

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { CaseWithConsent } from "@/types/app"
 import type { Urgency } from "@/types"
+import { getCaseStatusLabel } from "@/lib/followup"
 
 function urgencyLabel(u: Urgency): string {
   return u === "urgent" ? "Urgent" : u === "soon" ? "Soon" : "Routine"
@@ -42,9 +43,7 @@ export default function CaseList({ cases }: { cases: CaseWithConsent[] }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{c.summary.concern}</span>
                   <Badge variant={urgencyVariant(c.urgency)}>{urgencyLabel(c.urgency)}</Badge>
-                  <Badge variant="outline">
-                    {c.status === "reviewed" ? "Reviewed" : "New"}
-                  </Badge>
+                  <Badge variant="outline">{getCaseStatusLabel(c.status)}</Badge>
                   <Badge variant="outline">
                     {c.consent ? "Shared" : "Not shared"}
                   </Badge>

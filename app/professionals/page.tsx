@@ -8,7 +8,9 @@ export default function ProfessionalsPage() {
       <h1 className="text-3xl font-bold">For Professionals</h1>
       <p className="text-muted-foreground">
         A workspace where healthcare professionals review structured case
-        summaries and decide the next step.
+        summaries shared with their consent, request more information, exchange
+        messages, and schedule appointments. It does not replace professional
+        judgement.
       </p>
       <Disclaimer />
     </div>

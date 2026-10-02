@@ -8,7 +8,8 @@ export default function TermsPage() {
       <h1 className="text-3xl font-bold">Terms</h1>
       <p className="text-muted-foreground">
         CURERA AI is a communication tool. It does not provide medical advice,
-        diagnosis, or prescriptions.
+        diagnosis, or prescriptions. Do not use it for emergencies; seek
+        appropriate local emergency care.
       </p>
       <Disclaimer />
     </div>

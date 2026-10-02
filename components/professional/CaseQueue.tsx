@@ -1,13 +1,14 @@
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import type { CaseSummary, Urgency } from "@/types"
+import type { CaseStatus, CaseSummary, Urgency } from "@/types"
+import { getCaseStatusLabel } from "@/lib/followup"
 
 interface CaseItem {
   id: string
-  summary: CaseSummary
+  summary: CaseSummary | null
   urgency: Urgency
-  status: "new" | "reviewed"
+  status: CaseStatus
   created_at: string
 }
 
@@ -33,7 +34,7 @@ export default function CaseQueue({ cases }: { cases: CaseItem[] }) {
             <Card className="transition-colors hover:bg-muted/40">
               <CardContent className="p-4 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{c.summary.concern}</span>
+                  <span className="font-medium">{c.summary?.concern ?? "Shared case"}</span>
                   <Badge
                     variant={
                       c.urgency === "urgent" ? "destructive"
@@ -42,9 +43,7 @@ export default function CaseQueue({ cases }: { cases: CaseItem[] }) {
                   >
                     {c.urgency === "urgent" ? "Urgent" : c.urgency === "soon" ? "Soon" : "Routine"}
                   </Badge>
-                  <Badge variant="outline">
-                    {c.status === "reviewed" ? "Reviewed" : "New"}
-                  </Badge>
+                  <Badge variant="outline">{getCaseStatusLabel(c.status)}</Badge>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Shared {new Date(c.created_at).toLocaleString()}

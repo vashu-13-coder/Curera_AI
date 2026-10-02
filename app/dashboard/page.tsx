@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import CaseList from "@/components/dashboard/CaseList"
-import type { CaseSummary, Urgency } from "@/types"
+import type { CaseStatus, CaseSummary, Urgency } from "@/types"
 import type { CaseWithConsent, ConsentRow } from "@/types/app"
 
 export const metadata = { title: "Dashboard — CURERA AI" }
@@ -11,7 +11,7 @@ interface RawCase {
   patient_id: string
   summary: CaseSummary
   urgency: Urgency
-  status: "new" | "reviewed"
+  status: CaseStatus
   professional_note: string | null
   created_at: string
   consents: ConsentRow[] | null
