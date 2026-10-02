@@ -91,3 +91,23 @@ export interface AuditLogEntry {
   case_id: string | null
   created_at: string
 }
+export type EmergencyCategory =
+  | "cardiac"
+  | "breathing"
+  | "bleeding"
+  | "stroke"
+  | "unconscious_seizure"
+  | "poisoning"
+  | "self_harm"
+
+export interface EmergencyDetection {
+  isEmergency: boolean
+  category: EmergencyCategory | null
+  matchedPhrase: string | null
+}
+
+export interface EmergencyResponse {
+  title: string
+  message: string
+  actions: string[]
+}
