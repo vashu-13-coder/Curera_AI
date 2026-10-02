@@ -36,4 +36,4 @@ always in the loop, and information is shared only with patient consent.
 ### 1. Install dependencies
 
 ```bash
-npm install
+pnpm install

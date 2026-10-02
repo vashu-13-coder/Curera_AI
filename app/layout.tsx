@@ -1,11 +1,9 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
 
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "CURERA AI — Healthcare That Listens Before It Routes",
@@ -19,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.className} min-h-screen flex flex-col bg-background text-foreground antialiased`}
+        className="min-h-screen flex flex-col bg-background text-foreground antialiased"
       >
         <ThemeProvider
           attribute="class"

@@ -30,7 +30,6 @@ export default function Navbar() {
           <span className="ml-1 text-foreground">AI</span>
         </Link>
 
-        {/* Desktop navigation */}
         <nav
           aria-label="Main navigation"
           className="hidden md:flex items-center gap-6 text-sm font-medium"
@@ -47,7 +46,6 @@ export default function Navbar() {
           <ThemeToggle />
         </nav>
 
-        {/* Mobile navigation */}
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle />
           <DropdownMenu>
@@ -64,10 +62,7 @@ export default function Navbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {navLinks.map((link) => (
-                <DropdownMenuItem
-                  key={link.href}
-                  render={<Link href={link.href} />}
-                >
+                <DropdownMenuItem key={link.href} render={<Link href={link.href} />}>
                   {link.label}
                 </DropdownMenuItem>
               ))}
