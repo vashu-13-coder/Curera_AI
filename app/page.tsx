@@ -1,4 +1,7 @@
+import Link from "next/link"
+import { buttonVariants } from "@/components/ui/button"
 import Disclaimer from "@/components/shared/Disclaimer"
+import { cn } from "@/lib/utils"
 
 export default function Home() {
   return (
@@ -10,10 +13,21 @@ export default function Home() {
         <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
           From a patient&apos;s voice to the right healthcare professional.
         </p>
+        <div className="pt-2">
+          <Link
+            href="/assistant"
+            className={cn(buttonVariants({ size: "lg" }), "px-8")}
+          >
+            Start
+          </Link>
+        </div>
       </section>
+
       <Disclaimer />
+
       <p className="text-center text-sm text-muted-foreground">
-        Features are being built. Check back soon.
+        CURERA organizes what you say. A healthcare professional reviews it.
+        CURERA is not a doctor and does not diagnose.
       </p>
     </div>
   )

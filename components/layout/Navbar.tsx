@@ -43,6 +43,12 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          <Link
+            href="/assistant"
+            className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Start
+          </Link>
           <ThemeToggle />
         </nav>
 
@@ -62,10 +68,16 @@ export default function Navbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {navLinks.map((link) => (
-                <DropdownMenuItem key={link.href} render={<Link href={link.href} />}>
+                <DropdownMenuItem
+                  key={link.href}
+                  render={<Link href={link.href} />}
+                >
                   {link.label}
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuItem render={<Link href="/assistant" />}>
+                Start
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
