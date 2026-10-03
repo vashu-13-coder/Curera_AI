@@ -7,16 +7,40 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { getCaseStatusLabel } from "@/lib/followup"
 
-const statusActions: Array<{
-  status: "under_review" | "info_requested" | "closed"
-  label: string
-}> = [
-  { status: "under_review", label: "Mark under review" },
+type ProfessionalStatus = "reviewed" | "info_requested" | "closed"
+
+const statusActions: Array<{ status: ProfessionalStatus; label: string }> = [
+  { status: "reviewed", label: "Accept case" },
   { status: "info_requested", label: "Request more information" },
   { status: "closed", label: "Close case" },
 ]
+
+function statusText(status: string): string {
+  switch (status) {
+    case "new":
+      return "Waiting for review"
+    case "reviewed":
+      return "Accepted"
+    case "info_requested":
+      return "More information requested"
+    case "scheduled":
+      return "Appointment scheduled"
+    case "closed":
+      return "Closed"
+    default:
+      return status
+  }
+}
+
+async function patchStatus(caseId: string, status: string): Promise<boolean> {
+  const response = await fetch(`/api/cases/${caseId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  })
+  return response.ok
+}
 
 export default function StatusActionBar({
   caseId,
@@ -28,33 +52,28 @@ export default function StatusActionBar({
   initialNote: string
 }) {
   const router = useRouter()
-  const [status, setStatus] = useState(initialStatus)
+  const [status, setStatus] = useState<string>(initialStatus)
   const [note, setNote] = useState(initialNote)
   const [appointmentTime, setAppointmentTime] = useState("")
-  const [appointmentNotes, setAppointmentNotes] = useState("")
+  const [appointmentNote, setAppointmentNote] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [saved, setSaved] = useState(false)
 
-  async function updateStatus(nextStatus: "under_review" | "info_requested" | "closed") {
+  async function updateStatus(nextStatus: ProfessionalStatus) {
     setBusy(true)
     setError("")
     setSaved(false)
     try {
-      const response = await fetch(`/api/cases/${caseId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
-      })
-      if (response.ok) {
-        setStatus(nextStatus)
-        setBusy(false)
-        router.refresh()
+      const ok = await patchStatus(caseId, nextStatus)
+      if (!ok) {
+        setError("Could not update this case. Refresh and try again.")
         return
       }
-      throw new Error("Could not update case status.")
+      setStatus(nextStatus)
+      router.refresh()
     } catch {
-      setError("Could not update this case. Refresh and try again.")
+      setError("Network error. Please try again.")
     } finally {
       setBusy(false)
     }
@@ -71,11 +90,14 @@ export default function StatusActionBar({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ professionalNote: note }),
       })
-      if (!response.ok) throw new Error("Could not save professional note.")
+      if (!response.ok) {
+        setError("Could not save this note. Refresh and try again.")
+        return
+      }
       setSaved(true)
       router.refresh()
     } catch {
-      setError("Could not save this note. Refresh and try again.")
+      setError("Network error. Please try again.")
     } finally {
       setBusy(false)
     }
@@ -92,29 +114,46 @@ export default function StatusActionBar({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           scheduledAt: new Date(appointmentTime).toISOString(),
-          notes: appointmentNotes,
+          note: appointmentNote.trim() || undefined,
         }),
       })
-      if (!response.ok) throw new Error("Could not schedule appointment.")
+      if (!response.ok) {
+        setError(
+          "Could not schedule this appointment. Choose a future time and try again."
+        )
+        return
+      }
+
+      const statusOk = await patchStatus(caseId, "scheduled")
+      if (!statusOk) {
+        setError("Appointment saved, but the status could not be updated.")
+        router.refresh()
+        return
+      }
+
       setStatus("scheduled")
       setAppointmentTime("")
-      setAppointmentNotes("")
-      setBusy(false)
+      setAppointmentNote("")
+      setSaved(true)
       router.refresh()
-      return
     } catch {
-      setError("Could not schedule this appointment. Choose a future time and try again.")
+      setError("Network error. Please try again.")
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <section className="rounded-lg border bg-card p-4 space-y-5" aria-labelledby="status-actions-title">
+    <section
+      className="rounded-lg border bg-card p-4 space-y-5"
+      aria-labelledby="status-actions-title"
+    >
       <div>
-        <h2 id="status-actions-title" className="font-semibold">Case status and follow-up</h2>
+        <h2 id="status-actions-title" className="font-semibold">
+          Case status and follow-up
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Current status: {getCaseStatusLabel(status)}
+          Current status: {statusText(status)}
         </p>
       </div>
 
@@ -127,19 +166,21 @@ export default function StatusActionBar({
             onClick={() => void updateStatus(action.status)}
             disabled={busy || status === action.status}
           >
-            {busy ? "Saving…" : action.label}
+            {action.label}
           </Button>
         ))}
       </div>
 
       <form className="space-y-2" onSubmit={saveNote}>
-        <Label htmlFor={`professional-note-${caseId}`}>Professional note (optional)</Label>
+        <Label htmlFor={`professional-note-${caseId}`}>
+          Professional note (optional)
+        </Label>
         <Textarea
           id={`professional-note-${caseId}`}
           value={note}
-          onChange={(event) => setNote(event.target.value)}
+          onChange={(event) => setNote(event.target.value.slice(0, 1000))}
           rows={3}
-          maxLength={2000}
+          maxLength={1000}
           disabled={busy}
         />
         <Button type="submit" variant="outline" disabled={busy}>
@@ -161,23 +202,39 @@ export default function StatusActionBar({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`appointment-notes-${caseId}`}>Notes (optional)</Label>
+          <Label htmlFor={`appointment-note-${caseId}`}>
+            Note (optional, max 300 characters)
+          </Label>
           <Textarea
-            id={`appointment-notes-${caseId}`}
-            value={appointmentNotes}
-            onChange={(event) => setAppointmentNotes(event.target.value)}
+            id={`appointment-note-${caseId}`}
+            value={appointmentNote}
+            onChange={(event) =>
+              setAppointmentNote(event.target.value.slice(0, 300))
+            }
             rows={2}
-            maxLength={2000}
+            maxLength={300}
             disabled={busy}
           />
         </div>
-        <Button type="submit" variant="outline" disabled={busy || !appointmentTime}>
+        <Button
+          type="submit"
+          variant="outline"
+          disabled={busy || !appointmentTime}
+        >
           {busy ? "Saving…" : "Schedule"}
         </Button>
       </form>
 
-      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {saved && <p role="status" className="text-sm text-muted-foreground">Saved.</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      {saved && (
+        <p role="status" className="text-sm text-muted-foreground">
+          Saved.
+        </p>
+      )}
     </section>
   )
 }

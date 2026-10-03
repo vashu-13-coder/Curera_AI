@@ -9,7 +9,7 @@
 -- -----------------------------------------------------------------------------
 -- SECURITY DEFINER helpers (before any policy; no cross-table recursion)
 -- -----------------------------------------------------------------------------
-
+set check_function_bodies = off;
 create or replace function public.is_professional()
 returns boolean language sql security definer set search_path = public stable as $$
   select exists (

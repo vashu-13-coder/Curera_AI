@@ -128,9 +128,6 @@ export default async function CaseDetailPage({ params }: Params) {
             </blockquote>
           </Row>
           <Row label="Suggested professional type">{summary.suggestedProfessionalType}</Row>
-          {caseRow.professional_note && (
-            <Row label="Professional note">{caseRow.professional_note}</Row>
-          )}
         </CardContent>
       </Card>
 
