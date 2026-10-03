@@ -1,12 +1,12 @@
 import type { CaseStatus } from "@/types"
 
 const caseStatusLabels: Record<CaseStatus, string> = {
-  submitted: "Submitted",
-  under_review: "Under review",
+  new: "Submitted",
+  reviewed: "Under review",
   info_requested: "More information requested",
   scheduled: "Appointment scheduled",
   closed: "Closed",
-}
+};
 
 export function getCaseStatusLabel(status: CaseStatus): string {
   return caseStatusLabels[status]

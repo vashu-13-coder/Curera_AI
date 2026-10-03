@@ -3,14 +3,14 @@ export type UserRole = "patient" | "professional"
 export type Urgency = "routine" | "soon" | "urgent"
 
 export type CaseStatus =
-  | "submitted"
-  | "under_review"
+  | "new"
+  | "reviewed"
   | "info_requested"
   | "scheduled"
   | "closed"
 
 export type ProfessionalSettableStatus =
-  | "under_review"
+  | "reviewed"
   | "info_requested"
   | "closed"
 

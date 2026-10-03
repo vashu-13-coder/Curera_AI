@@ -1,15 +1,22 @@
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import type { CaseStatus, CaseSummary, Urgency } from "@/types"
-import { getCaseStatusLabel } from "@/lib/followup"
+import type { CaseSummary, CaseStatus, Urgency } from "@/types"
 
 interface CaseItem {
   id: string
-  summary: CaseSummary | null
+  summary: CaseSummary
   urgency: Urgency
   status: CaseStatus
   created_at: string
+}
+
+const STATUS_LABEL: Record<CaseStatus, string> = {
+  new: "New",
+  reviewed: "Reviewed",
+  info_requested: "Info requested",
+  scheduled: "Scheduled",
+  closed: "Closed",
 }
 
 export default function CaseQueue({ cases }: { cases: CaseItem[] }) {
@@ -34,16 +41,23 @@ export default function CaseQueue({ cases }: { cases: CaseItem[] }) {
             <Card className="transition-colors hover:bg-muted/40">
               <CardContent className="p-4 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{c.summary?.concern ?? "Shared case"}</span>
+                  <span className="font-medium">{c.summary.concern}</span>
                   <Badge
                     variant={
-                      c.urgency === "urgent" ? "destructive"
-                        : c.urgency === "soon" ? "default" : "secondary"
+                      c.urgency === "urgent"
+                        ? "destructive"
+                        : c.urgency === "soon"
+                          ? "default"
+                          : "secondary"
                     }
                   >
-                    {c.urgency === "urgent" ? "Urgent" : c.urgency === "soon" ? "Soon" : "Routine"}
+                    {c.urgency === "urgent"
+                      ? "Urgent"
+                      : c.urgency === "soon"
+                        ? "Soon"
+                        : "Routine"}
                   </Badge>
-                  <Badge variant="outline">{getCaseStatusLabel(c.status)}</Badge>
+                  <Badge variant="outline">{STATUS_LABEL[c.status]}</Badge>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Shared {new Date(c.created_at).toLocaleString()}
